@@ -133,6 +133,17 @@ get_grad <- function(sigma){
   -1 / (sigma * sqrt(-2 * log(sigma)))
 }
 
+# # Get plot showing 1-1 relationship
+# tpd_vals <- seq(0.001, 1, length.out = 1001)
+# lam_tpd_map <- data.frame(tpd = tpd_vals,  
+#                           lam = get_lambda(tpd_vals))
+# temp_plot <- ggplot(lam_tpd_map, aes(x = tpd, y = lam)) + 
+#   geom_line() + 
+#   labs(x = expression("TPD:" ~ sigma), y = expression("HR:" ~ lambda)) + 
+#   theme_minimal()
+# ggsave("./plots/tpd_lam_mapping.png", 
+#        width = 6, height = 2.5, plot = temp_plot)
+
 #####
 # single HR-to-tpdm functions
 #####

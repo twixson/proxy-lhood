@@ -5,6 +5,7 @@
 # To use the proxy-likelihood to fit models:
 source("./proxy_likelihood_fitting.R")
 library(tidyverse)
+library(cowplot)
 set.seed(873)
 length_ts    <- 10000
 
@@ -67,7 +68,7 @@ p1 <- ggplot(data = tpdf_tibble11, aes(x = lag, y = tpd)) +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 4,
            label = "HR fit", col = "orange") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 6,
-           label = "Natural est.", color = "#009E73") +
+           label = "Empirical est.", color = "#009E73") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 8,
            label = "Innov. fit", color = "#CC79A7") +
   labs(x = "Lag", y = "TPD") +
@@ -143,7 +144,7 @@ p2 <- ggplot(data = tpdf_tibble22, aes(x = lag, y = tpd)) +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 4,
            label = "HR fit", col = "orange") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 6,
-           label = "Natural est.", color = "#009E73") +
+           label = "Empirical est.", color = "#009E73") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 8,
            label = "Innov. fit", color = "#CC79A7") +
   labs(x = "Lag", y = "TPD") +
@@ -218,7 +219,7 @@ p3 <- ggplot(data = tpdf_tibble33, aes(x = lag, y = tpd)) +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 4,
            label = "HR fit", col = "orange") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 6,
-           label = "Natural est.", color = "#009E73") +
+           label = "Empirical est.", color = "#009E73") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 8,
            label = "Innov. fit", color = "#CC79A7") +
   labs(x = "Lag", y = "TPD") +
@@ -289,7 +290,7 @@ p4 <- ggplot(data = tpdf_tibble44, aes(x = lag, y = tpd)) +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 4,
            label = "HR fit", col = "orange") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 6,
-           label = "Natural est.", color = "#009E73") +
+           label = "Empirical est.", color = "#009E73") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 8,
            label = "Innov. fit", color = "#CC79A7") +
   labs(x = "Lag", y = "TPD") +
@@ -302,8 +303,8 @@ p4
 #######
 # Combine plots for paper
 #######
-library(cowplot)
-cowplot::plot_grid(p1, p2, p3, p4)
+a <- cowplot::plot_grid(p1, p2, p3, p4)
+save_plot("./plots/model_fitting_4model_plot.png", a, base_height = 3.4, base_asp = 3)
 
 
 
@@ -523,7 +524,7 @@ get_ab_results <- function(x){
 
 results4 <- get_ab_results(errors_arma11)
 
-saveRDS(errors_arma11, "./proxy_sim_fitting_arma_results.rds")
+saveRDS(errors_arma11, "./data/proxy_sim_model_fitting_arma_results.rds")
 
 
 full_results <- list(errors_ma5 = errors_ma5, 
@@ -534,4 +535,4 @@ full_results <- list(errors_ma5 = errors_ma5,
                      results_ma10 = results2,
                      results_ma15 = results3, 
                      results_arma11 = results4)
-saveRDS(full_results, "./proxy_sim_fitting_results_all_081926.rds")
+saveRDS(full_results, "./data/proxy_sim_model_fitting_results_all_081926.rds")

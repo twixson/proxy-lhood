@@ -7,6 +7,8 @@ length_ts    <- 10000
 source("./code/proxy_likelihood_fitting.R")
 library(cowplot)
 library(tidyverse)
+library(Matrix)
+
 
 # 0: get some data to estimate the TPD of: 
 q_sim <- 5  # order of MA model to simulate from
@@ -22,7 +24,7 @@ init_tpdf    <- TPDF(temp_data, maxlag = 20)[-1]
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 init_tpdm    <- toeplitz(c(1, init_tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  init_tpdm  <- nearPD(init_tpdm)
+  init_tpdm  <- nearPD(init_tpdm)$mat
   init_tpdf  <- init_tpdm[1, 2:21] 
   print("~~~ FOUND A NON-PD EMPIRICAL TPDF ~~~")
 }
@@ -42,7 +44,7 @@ out_llhood$tpdf <- sapply(out_llhood$par, hr_tpdm)
   # check if matrix of TPD values is positive definite, if not find a nearby PD
 out_llhood$tpdm <- toeplitz(c(1, out_llhood$tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  out_llhood$tpdm  <- nearPD(out_llhood$tpdm)
+  out_llhood$tpdm  <- nearPD(out_llhood$tpdm)$mat
   out_llhood$tpdf  <- out_llhood$tpdf[1, 2:21] 
   print("~~~ FOUND A NON-PD PROXY TPDF ~~~")
 }
@@ -60,7 +62,7 @@ out_llhood$innov_tpdf <- ma_q_tpdf(out_llhood$innov[[1]][20, 1:20])
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 out_llhood$innov_tpdm <- toeplitz(c(1, out_llhood$innov_tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  out_llhood$innov_tpdm  <- nearPD(out_llhood$innov_tpdm)
+  out_llhood$innov_tpdm  <- nearPD(out_llhood$innov_tpdm)$mat
   out_llhood$innov_tpdf  <- out_llhood$innov_tpdf[1, 2:21] 
   print("~~~ FOUND A NON-PD LHOOD INNOVATIONS TPDF ~~~")
 }
@@ -73,7 +75,7 @@ innov_tpdf <- ma_q_tpdf(innov_emp[[1]][20, ])
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 innov_tdpm <- toeplitz(c(1, innov_tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  innov_tdpm  <- nearPD(innov_tpdm)
+  innov_tdpm  <- nearPD(innov_tpdm)$mat
   innov_tpdf  <- innov_tpdf[1, 2:21] 
   print("~~~ FOUND A NON-PD INNOVATIONS TPDF ~~~")
 }
@@ -96,18 +98,18 @@ tpdf_tibble1  <- tibble(lag = 0:plot_max_lag,
 p1 <- ggplot(data = tpdf_tibble1, aes(x = lag, y = tpd)) +
   geom_hline(aes(yintercept = 0)) +
   geom_segment(mapping = aes(xend = lag, yend = 0), lwd = 0.75, col = "black") +
-  geom_segment(mapping = aes(x = lag  + 0.15, y = tpd_est_hr,
+  geom_segment(mapping = aes(x = lag  + 0.15, y = tpd_est_natural,
                              xend = lag + 0.15, yend = 0),
-               col = "orange", lwd= 1) +
-  geom_segment(mapping = aes(x = lag  + 0.3, y = tpd_est_natural,
+               col = "orange", lwd = 0.75) +
+  geom_segment(mapping = aes(x = lag  + 0.3, y = tpd_est_hr,
                              xend = lag + 0.3, yend = 0),
-               col = "#009E73", lwd= 1) +
+               col = "#009E73", lwd = 0.75) +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 2,
            label= "Model") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 4,
-           label = "HR est.", col = "orange") +
+           label = "Empirical est.", col = "orange") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 6,
-           label = "Empirical est.", color = "#009E73") +
+           label = "HR est.", color = "#009E73") +
   annotate(geom = "text", x=0,y=Inf, hjust = -0.15, vjust = 1,
            label = paste0("TL-MA(5)")) + 
   labs(x = "Lag", y = "TPD") +
@@ -148,7 +150,7 @@ init_tpdf    <- TPDF(temp_data, maxlag = 20)[-1]
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 init_tpdm    <- toeplitz(c(1, init_tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  init_tpdm  <- nearPD(init_tpdm)
+  init_tpdm  <- nearPD(init_tpdm)$mat
   init_tpdf  <- init_tpdm[1, 2:21] 
   print("~~~ FOUND A NON-PD EMPIRICAL TPDF ~~~")
 }
@@ -168,7 +170,7 @@ out_llhood$tpdf <- sapply(out_llhood$par, hr_tpdm)
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 out_llhood$tpdm <- toeplitz(c(1, out_llhood$tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  out_llhood$tpdm  <- nearPD(out_llhood$tpdm)
+  out_llhood$tpdm  <- nearPD(out_llhood$tpdm)$mat
   out_llhood$tpdf  <- out_llhood$tpdf[1, 2:21] 
   print("~~~ FOUND A NON-PD PROXY TPDF ~~~")
 }
@@ -186,7 +188,7 @@ out_llhood$innov_tpdf <- ma_q_tpdf(out_llhood$innov[[1]][20, 1:20])
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 out_llhood$innov_tpdm <- toeplitz(c(1, out_llhood$innov_tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  out_llhood$innov_tpdm  <- nearPD(out_llhood$innov_tpdm)
+  out_llhood$innov_tpdm  <- nearPD(out_llhood$innov_tpdm)$mat
   out_llhood$innov_tpdf  <- out_llhood$innov_tpdf[1, 2:21] 
   print("~~~ FOUND A NON-PD LHOOD INNOVATIONS TPDF ~~~")
 }
@@ -199,7 +201,7 @@ innov_tpdf <- ma_q_tpdf(innov_emp[[1]][20, ])
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 innov_tdpm <- toeplitz(c(1, innov_tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  innov_tdpm  <- nearPD(innov_tpdm)
+  innov_tdpm  <- nearPD(innov_tpdm)$mat
   innov_tpdf  <- innov_tpdf[1, 2:21] 
   print("~~~ FOUND A NON-PD INNOVATIONS TPDF ~~~")
 }
@@ -222,18 +224,18 @@ tpdf_tibble2  <- tibble(lag = 0:plot_max_lag,
 p2 <- ggplot(data = tpdf_tibble2, aes(x = lag, y = tpd)) +
   geom_hline(aes(yintercept = 0)) +
   geom_segment(mapping = aes(xend = lag, yend = 0), lwd = 0.75, col = "black") +
-  geom_segment(mapping = aes(x = lag  + 0.15, y = tpd_est_hr,
+  geom_segment(mapping = aes(x = lag  + 0.15, y = tpd_est_natural,
                              xend = lag + 0.15, yend = 0),
-               col = "orange", lwd= 1) +
-  geom_segment(mapping = aes(x = lag  + 0.3, y = tpd_est_natural,
+               col = "orange", lwd = 0.75) +
+  geom_segment(mapping = aes(x = lag  + 0.3, y = tpd_est_hr,
                              xend = lag + 0.3, yend = 0),
-               col = "#009E73", lwd= 1) +
+               col = "#009E73", lwd = 0.75) +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 2,
            label= "Model") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 4,
-           label = "HR est.", col = "orange") +
+           label = "Empirical est.", col = "orange") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 6,
-           label = "Empirical est.", color = "#009E73") +
+           label = "HR est.", color = "#009E73") +
   annotate(geom = "text", x=0,y=Inf, hjust = -0.15, vjust = 1,
            label = paste0("TL-MA(10)")) + 
   labs(x = "Lag", y = "TPD") +
@@ -270,7 +272,7 @@ init_tpdf    <- TPDF(temp_data, maxlag = 20)[-1]
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 init_tpdm    <- toeplitz(c(1, init_tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  init_tpdm  <- nearPD(init_tpdm)
+  init_tpdm  <- nearPD(init_tpdm)$mat
   init_tpdf  <- init_tpdm[1, 2:21] 
   print("~~~ FOUND A NON-PD EMPIRICAL TPDF ~~~")
 }
@@ -290,7 +292,7 @@ out_llhood$tpdf <- sapply(out_llhood$par, hr_tpdm)
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 out_llhood$tpdm <- toeplitz(c(1, out_llhood$tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  out_llhood$tpdm  <- nearPD(out_llhood$tpdm)
+  out_llhood$tpdm  <- nearPD(out_llhood$tpdm)$mat
   out_llhood$tpdf  <- out_llhood$tpdf[1, 2:21] 
   print("~~~ FOUND A NON-PD PROXY TPDF ~~~")
 }
@@ -308,7 +310,7 @@ out_llhood$innov_tpdf <- ma_q_tpdf(out_llhood$innov[[1]][20, 1:20])
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 out_llhood$innov_tpdm <- toeplitz(c(1, out_llhood$innov_tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  out_llhood$innov_tpdm  <- nearPD(out_llhood$innov_tpdm)
+  out_llhood$innov_tpdm  <- nearPD(out_llhood$innov_tpdm)$mat
   out_llhood$innov_tpdf  <- out_llhood$innov_tpdf[1, 2:21] 
   print("~~~ FOUND A NON-PD LHOOD INNOVATIONS TPDF ~~~")
 }
@@ -321,7 +323,7 @@ innov_tpdf <- ma_q_tpdf(innov_emp[[1]][20, ])
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 innov_tdpm <- toeplitz(c(1, innov_tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  innov_tdpm  <- nearPD(innov_tpdm)
+  innov_tdpm  <- nearPD(innov_tpdm)$mat
   innov_tpdf  <- innov_tpdf[1, 2:21] 
   print("~~~ FOUND A NON-PD INNOVATIONS TPDF ~~~")
 }
@@ -344,18 +346,18 @@ tpdf_tibble3  <- tibble(lag = 0:plot_max_lag,
 p3 <- ggplot(data = tpdf_tibble3, aes(x = lag, y = tpd)) +
   geom_hline(aes(yintercept = 0)) +
   geom_segment(mapping = aes(xend = lag, yend = 0), lwd = 0.75, col = "black") +
-  geom_segment(mapping = aes(x = lag  + 0.15, y = tpd_est_hr,
+  geom_segment(mapping = aes(x = lag  + 0.15, y = tpd_est_natural,
                              xend = lag + 0.15, yend = 0),
-               col = "orange", lwd= 1) +
-  geom_segment(mapping = aes(x = lag  + 0.3, y = tpd_est_natural,
+               col = "orange", lwd = 0.75) +
+  geom_segment(mapping = aes(x = lag  + 0.3, y = tpd_est_hr,
                              xend = lag + 0.3, yend = 0),
-               col = "#009E73", lwd= 1) +
+               col = "#009E73", lwd = 0.75) +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 2,
-           label= "Model ") +
+           label= "Model") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 4,
-           label = "HR est.", col = "orange") +
+           label = "Empirical est.", col = "orange") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 6,
-           label = "Empirical est.", color = "#009E73") +
+           label = "HR est.", color = "#009E73") +
   annotate(geom = "text", x=0,y=Inf, hjust = -0.15, vjust = 1,
            label = paste0("TL-MA(15)")) + 
   labs(x = "Lag", y = "TPD") +
@@ -392,7 +394,7 @@ init_tpdf    <- TPDF(temp_data, maxlag = 20)[-1]
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 init_tpdm    <- toeplitz(c(1, init_tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  init_tpdm  <- nearPD(init_tpdm)
+  init_tpdm  <- nearPD(init_tpdm)$mat
   init_tpdf  <- init_tpdm[1, 2:21] 
   print("~~~ FOUND A NON-PD EMPIRICAL TPDF ~~~")
 }
@@ -412,7 +414,7 @@ out_llhood$tpdf <- sapply(out_llhood$par, hr_tpdm)
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 out_llhood$tpdm <- toeplitz(c(1, out_llhood$tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  out_llhood$tpdm  <- nearPD(out_llhood$tpdm)
+  out_llhood$tpdm  <- nearPD(out_llhood$tpdm)$mat
   out_llhood$tpdf  <- out_llhood$tpdf[1, 2:21] 
   print("~~~ FOUND A NON-PD PROXY TPDF ~~~")
 }
@@ -430,7 +432,7 @@ out_llhood$innov_tpdf <- ma_q_tpdf(out_llhood$innov[[1]][20, 1:20])
 # check if matrix of TPD values is positive definite, if not find a nearby PD
 out_llhood$innov_tpdm <- toeplitz(c(1, out_llhood$innov_tpdf))
 if(min(eigen(init_tpdm)$val) < 0){
-  out_llhood$innov_tpdm  <- nearPD(out_llhood$innov_tpdm)
+  out_llhood$innov_tpdm  <- nearPD(out_llhood$innov_tpdm)$mat
   out_llhood$innov_tpdf  <- out_llhood$innov_tpdf[1, 2:21] 
   print("~~~ FOUND A NON-PD LHOOD INNOVATIONS TPDF ~~~")
 }
@@ -447,18 +449,18 @@ tpdf_tibble4  <- tibble(lag = 0:plot_max_lag,
 p4 <- ggplot(data = tpdf_tibble4, aes(x = lag, y = tpd)) +
   geom_hline(aes(yintercept = 0)) +
   geom_segment(mapping = aes(xend = lag, yend = 0), lwd = 0.75, col = "black") +
-  geom_segment(mapping = aes(x = lag  + 0.15, y = tpd_est_hr,
-                             xend = lag + 0.15, yend = 0),
-               col = "orange", lwd= 1) +
-  geom_segment(mapping = aes(x = lag  + 0.3, y = tpd_est_natural,
+  geom_segment(mapping = aes(x = lag  + 0.15, y = tpd_est_natural,
+                              xend = lag + 0.15, yend = 0),
+                col = "orange", lwd= 0.75) +
+  geom_segment(mapping = aes(x = lag  + 0.3, y = tpd_est_hr,
                              xend = lag + 0.3, yend = 0),
-               col = "#009E73", lwd= 1) +
+               col = "#009E73", lwd = 0.75) +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 2,
            label= "Model") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 4,
-           label = "HR est.", col = "orange") +
+           label = "Empirical est.", col = "orange") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 6,
-           label = "Empirical est.", color = "#009E73") +
+           label = "HR est.", color = "#009E73") +
   annotate(geom = "text", x=0,y=Inf, hjust = -0.15, vjust = 1,
            label = paste0("TL-ARMA(1,1)")) + 
   labs(x = "Lag", y = "TPD") + 
@@ -484,7 +486,7 @@ errors4 <-
 # Combine plots for paper
 #######
 a <- cowplot::plot_grid(p1, p2, p3, p4)
-save_plot("./plots/tpd_est_4model_plot.png", a, base_height = 3.4, base_asp = 3)
+save_plot("./plots/tpd_est_4model_plot2.png", a, base_height = 3.4, base_asp = 3)
 
 b <- cowplot::plot_grid(p1, p2)
 save_plot("./plots/tpd_est_2model_plot.png", b, base_height = 3.4, base_asp = 3.5)
@@ -552,7 +554,7 @@ for(i in 1:num_sims){
   # check if matrix of TPD values is positive definite, if not find a nearby PD
   init_tpdm    <- toeplitz(c(1, init_tpdf))
   if(min(eigen(init_tpdm)$val) < 0){
-    init_tpdm  <- nearPD(init_tpdm)
+    init_tpdm  <- nearPD(init_tpdm)$mat
     init_tpdf  <- init_tpdm[1, 2:21] 
     print("~~~ FOUND A NON-PD EMPIRICAL TPDF ~~~")
   }
@@ -565,7 +567,7 @@ for(i in 1:num_sims){
   # check if matrix of TPD values is positive definite, if not find a nearby PD
   out_llhood$tpdm <- toeplitz(c(1, out_llhood$tpdf))
   if(min(eigen(init_tpdm)$val) < 0){
-    out_llhood$tpdm  <- nearPD(out_llhood$tpdm)
+    out_llhood$tpdm  <- nearPD(out_llhood$tpdm)$mat
     out_llhood$tpdf  <- out_llhood$tpdf[1, 2:21] 
     print("~~~ FOUND A NON-PD PROXY TPDF ~~~")
   }
@@ -597,7 +599,7 @@ for(i in 1:num_sims){
   # check if matrix of TPD values is positive definite, if not find a nearby PD
   init_tpdm    <- toeplitz(c(1, init_tpdf))
   if(min(eigen(init_tpdm)$val) < 0){
-    init_tpdm  <- nearPD(init_tpdm)
+    init_tpdm  <- nearPD(init_tpdm)$mat
     init_tpdf  <- init_tpdm[1, 2:21] 
     print("~~~ FOUND A NON-PD EMPIRICAL TPDF ~~~")
   }
@@ -610,7 +612,7 @@ for(i in 1:num_sims){
   # check if matrix of TPD values is positive definite, if not find a nearby PD
   out_llhood$tpdm <- toeplitz(c(1, out_llhood$tpdf))
   if(min(eigen(init_tpdm)$val) < 0){
-    out_llhood$tpdm  <- nearPD(out_llhood$tpdm)
+    out_llhood$tpdm  <- nearPD(out_llhood$tpdm)$mat
     out_llhood$tpdf  <- out_llhood$tpdf[1, 2:21] 
     print("~~~ FOUND A NON-PD PROXY TPDF ~~~")
   }
@@ -642,7 +644,7 @@ for(i in 1:num_sims){
   # check if matrix of TPD values is positive definite, if not find a nearby PD
   init_tpdm    <- toeplitz(c(1, init_tpdf))
   if(min(eigen(init_tpdm)$val) < 0){
-    init_tpdm  <- nearPD(init_tpdm)
+    init_tpdm  <- nearPD(init_tpdm)$mat
     init_tpdf  <- init_tpdm[1, 2:21] 
     print("~~~ FOUND A NON-PD EMPIRICAL TPDF ~~~")
   }
@@ -655,7 +657,7 @@ for(i in 1:num_sims){
   # check if matrix of TPD values is positive definite, if not find a nearby PD
   out_llhood$tpdm <- toeplitz(c(1, out_llhood$tpdf))
   if(min(eigen(init_tpdm)$val) < 0){
-    out_llhood$tpdm  <- nearPD(out_llhood$tpdm)
+    out_llhood$tpdm  <- nearPD(out_llhood$tpdm)$mat
     out_llhood$tpdf  <- out_llhood$tpdf[1, 2:21] 
     print("~~~ FOUND A NON-PD PROXY TPDF ~~~")
   }
@@ -683,7 +685,7 @@ for(i in 1:num_sims){
   # check if matrix of TPD values is positive definite, if not find a nearby PD
   init_tpdm    <- toeplitz(c(1, init_tpdf))
   if(min(eigen(init_tpdm)$val) < 0){
-    init_tpdm  <- nearPD(init_tpdm)
+    init_tpdm  <- nearPD(init_tpdm)$mat
     init_tpdf  <- init_tpdm[1, 2:21] 
     print("~~~ FOUND A NON-PD EMPIRICAL TPDF ~~~")
   }
@@ -696,7 +698,7 @@ for(i in 1:num_sims){
   # check if matrix of TPD values is positive definite, if not find a nearby PD
   out_llhood$tpdm <- toeplitz(c(1, out_llhood$tpdf))
   if(min(eigen(init_tpdm)$val) < 0){
-    out_llhood$tpdm  <- nearPD(out_llhood$tpdm)
+    out_llhood$tpdm  <- nearPD(out_llhood$tpdm)$mat
     out_llhood$tpdf  <- out_llhood$tpdf[1, 2:21] 
     print("~~~ FOUND A NON-PD PROXY TPDF ~~~")
   }

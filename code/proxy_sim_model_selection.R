@@ -4,7 +4,7 @@
 
 set.seed(287) 
 length_ts    <- 10000
-source("./proxy_likelihood_fitting.R")
+source("./code/proxy_likelihood_fitting.R")
 library(tidyverse)
 
 # To demonstrate that two different models can have similar TPDs
@@ -52,7 +52,7 @@ p_1 <- ggplot(data = tpdf_tibble_1, aes(x = lag, y = tpd)) +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 2,
            label= "Model TL-ARMA(\u03D5=0.1, \u03B8=0.5)") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 4,
-           label = "Natural est.", col = "orange") +
+           label = "Empirical est.", col = "orange") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 6,
            label = "Fitted TL-ARMA(1,1)", color = "#009E73") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 8,
@@ -61,7 +61,7 @@ p_1 <- ggplot(data = tpdf_tibble_1, aes(x = lag, y = tpd)) +
   scale_x_continuous(breaks = 0:20) +
   theme_minimal()
 p_1
-ggsave("./proxy_paper/fitted_tpd_comparison_t01p05_081826.png", plot = p_1)
+ggsave("./plots/fitted_tpd_comparison_t01p05_081826.png", plot = p_1)
 
 # 7: model selection
 fitted_models <- optim_MAq_multiple(theta_init = 0.1, max_q = 2, 
@@ -107,7 +107,7 @@ for(i in 1:100){
 arma0501_results <- list(best_CLAIC = best_CLAIC, 
                          best_CLBIC = best_CLBIC, 
                          score_diff = score_diff)
-saveRDS(arma0501_results, "./simulation_results_arma0906_081816.rds")
+# saveRDS(arma0501_results, "./data/simulation_results_arma0906_081816.rds")
 
 
 
@@ -171,7 +171,7 @@ p_2 <- ggplot(data = tpdf_tibble_1, aes(x = lag, y = tpd)) +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 2,
            label= "Model TL-ARMA(\u03D5=0.6, \u03B8=0.9)") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 4,
-           label = "Natural est.", col = "orange") +
+           label = "Empirical est.", col = "orange") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 6,
            label = "Fitted TL-ARMA(1,1)", color = "#009E73") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 8,
@@ -182,7 +182,7 @@ p_2 <- ggplot(data = tpdf_tibble_1, aes(x = lag, y = tpd)) +
   scale_x_continuous(breaks = 0:20) +
   theme_minimal()
 p_2
-ggsave("./proxy_paper/fitted_tpd_comparison_t019p06_081826.png", plot = p_2)
+# ggsave("./plots/fitted_tpd_comparison_t019p06_081826.png", plot = p_2)
 
 # 7: model selection
 scores_temp <- get_scores(library_fits = fitted_models, ts_list = temp_pairs, 
@@ -239,7 +239,7 @@ arma0906_results <- list(best_CLAIC = best_CLAIC,
                            best_AIC2 = best_AIC2, 
                            score_diffA = score_diffA, 
                            score_diffB = score_diffB)
-saveRDS(arma0906_results, "./simulation_results_arma0906_081816.rds")
+# saveRDS(arma0906_results, "./data/simulation_results_arma0906_081816.rds")
 
 
 
@@ -248,7 +248,7 @@ saveRDS(arma0906_results, "./simulation_results_arma0906_081816.rds")
 
 # To test a model with more complex dependence
 set.seed(49291)
-innovs <- readRDS("./ERA5_CO_innov_thetas.rds")
+innovs <- readRDS("./data/ERA5_CO_innov_thetas.rds")
 innovs <- innovs$theta_late[15, 1:15]
 round(arma_11_tpdf(c(0.5, 0.1))[c(3, 11)], 3)
 #[1] 0.005 0.000
@@ -298,22 +298,22 @@ tpdf_tibble_3  <- tibble(lag = 0:plot_lag,
 p_3 <- ggplot(data = tpdf_tibble_3, aes(x = lag, y = tpd)) +
   geom_hline(aes(yintercept = 0)) +
   geom_segment(mapping = aes(xend = lag, yend = 0), lwd = 0.75, col = "black") +
-  geom_segment(mapping = aes(x = lag  + 0.15, y = tpd_est_natural,
-                             xend = lag + 0.15, yend = 0),
-               col = "orange", lwd= 1) +
-  geom_segment(mapping = aes(x = lag  + 0.3, y = tpd_arma11,
+  geom_segment(mapping = aes(x = lag  + 0.1, y = tpd_est_natural,
+                             xend = lag + 0.1, yend = 0),
+               col = "orange", lwd= 0.75) +
+  geom_segment(mapping = aes(x = lag  + 0.2, y = tpd_arma11,
+                             xend = lag + 0.2, yend = 0),
+               col = "#009E73", lwd= 0.75) +
+  geom_segment(mapping = aes(x = lag  + 0.3, y = tpd_ar1,
                              xend = lag + 0.3, yend = 0),
-               col = "#009E73", lwd= 1) +
-  geom_segment(mapping = aes(x = lag  + 0.45, y = tpd_ar1,
-                             xend = lag + 0.45, yend = 0),
-               col = "#CC79A7", lwd= 1) +
-  geom_segment(mapping = aes(x = lag  + 0.6, y = tpd_fitted,
-                             xend = lag + 0.6, yend = 0),
-               col = "#0072B2", lwd= 1) +
+               col = "#CC79A7", lwd= 0.75) +
+  geom_segment(mapping = aes(x = lag  + 0.4, y = tpd_fitted,
+                             xend = lag + 0.4, yend = 0),
+               col = "#0072B2", lwd= 0.75) +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 2,
            label= "Model TL-MA(15)") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 4,
-           label = "Natural est.", col = "orange") +
+           label = "Empirical est.", col = "orange") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 6,
            label = "Fitted TL-ARMA(1,1)", color = "#009E73") +
   annotate(geom = "text", x=Inf,y=Inf, hjust = 1, vjust = 8,
@@ -324,8 +324,8 @@ p_3 <- ggplot(data = tpdf_tibble_3, aes(x = lag, y = tpd)) +
   scale_x_continuous(breaks = 0:20) +
   theme_minimal()
 p_3
-ggsave("./proxy_paper/fitted_tpd_comparison_wildfireInnovThetas_081826.png", 
-       plot = p_1)
+ggsave("./plots/fitted_tpd_comparison_wildfireInnovThetas_081826.png", 
+       width = 8, height = 2.5, plot = p_3)
 
 # 7: model selection
 scores_temp <- get_scores(library_fits = fitted_models, ts_list = temp_pairs, 
